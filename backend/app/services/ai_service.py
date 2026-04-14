@@ -94,11 +94,19 @@ Return ONLY JSON:
 
 def safe_json(content: str) -> dict:
     try:
+        # limpiar markdown ```json ```
+        content = content.strip()
+
+        if content.startswith("```"):
+            content = content.replace("```json", "").replace("```", "").strip()
+
         return json.loads(content)
-    except:
+
+    except Exception as e:
         return {
             "error": "Invalid JSON",
-            "raw_output": content
+            "raw_output": content,
+            "details": str(e)
         }
     
 def rewrite_cv(cv_text: str, job_text: str, analysis: dict) -> dict:
