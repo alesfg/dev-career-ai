@@ -5,17 +5,71 @@ from app.core.config import settings
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 
-def analyze_cv_job(cv_text: str, job_text: str) -> dict:
+def extract_cv(cv_text: str) -> dict:
     prompt = f"""
-You are a senior technical recruiter and career coach.
+Extract structured information from this CV.
 
-Analyze the following CV and job description.
+Return ONLY JSON with:
+- skills
+- experience
+- technologies
+- seniority (junior, mid, senior)
 
-Return ONLY a valid JSON. No explanations. No extra text.
+CV:
+{cv_text}
+"""
 
-If you fail to return valid JSON, your response is useless.
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You only return JSON."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.2
+    )
 
-Structure:
+    return safe_json(response.choices[0].message.content)
+
+
+def extract_job(job_text: str) -> dict:
+    prompt = f"""
+Extract structured information from this job description.
+
+Return ONLY JSON with:
+- required_skills
+- technologies
+- seniority
+- responsibilities
+
+JOB:
+{job_text}
+"""
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You only return JSON."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.2
+    )
+
+    return safe_json(response.choices[0].message.content)
+
+
+def compare_and_generate(cv_data: dict, job_data: dict) -> dict:
+    prompt = f"""
+You are a senior recruiter.
+
+Compare this candidate with the job.
+
+CV DATA:
+{cv_data}
+
+JOB DATA:
+{job_data}
+
+Return ONLY JSON:
 {{
   "match_score": number,
   "strengths": [],
@@ -24,29 +78,25 @@ Structure:
   "cv_improvements": [],
   "project_suggestions": []
 }}
-
-CV:
-{cv_text}
-
-JOB DESCRIPTION:
-{job_text}
 """
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "You ONLY return valid JSON."},
+            {"role": "system", "content": "You only return JSON."},
             {"role": "user", "content": prompt}
         ],
         temperature=0.3
     )
 
-    content = response.choices[0].message.content
+    return safe_json(response.choices[0].message.content)
 
+
+def safe_json(content: str) -> dict:
     try:
         return json.loads(content)
     except:
         return {
-            "error": "Invalid JSON from model",
+            "error": "Invalid JSON",
             "raw_output": content
         }
