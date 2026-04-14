@@ -146,3 +146,42 @@ Return ONLY JSON:
     )
 
     return safe_json(response.choices[0].message.content)
+
+def generate_roadmap(analysis: dict) -> dict:
+    prompt = f"""
+You are an expert career coach for software engineers.
+
+Based on this analysis:
+{analysis}
+
+Create a practical improvement roadmap.
+
+Rules:
+- Be realistic
+- Focus on high-impact skills
+- Include specific actions
+- Keep it concise
+
+Return ONLY JSON:
+{{
+  "roadmap": [
+    {{
+      "week": 1,
+      "focus": "skill or topic",
+      "actions": ["specific tasks"]
+    }}
+  ],
+  "priority_skills": []
+}}
+"""
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You only return JSON."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.4
+    )
+
+    return safe_json(response.choices[0].message.content)
