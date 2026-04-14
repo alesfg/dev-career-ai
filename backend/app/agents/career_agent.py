@@ -63,7 +63,30 @@ def build_agent():
 
     graph.add_edge("extract_cv", "extract_job")
     graph.add_edge("extract_job", "compare")
-    graph.add_edge("compare", "rewrite")
+
+    # 🔥 AQUÍ ESTÁ LA MAGIA
+    graph.add_conditional_edges(
+        "compare",
+        decide_next_step,
+        {
+            "rewrite": "rewrite",
+            "roadmap": "roadmap",
+            "end": "__end__"
+        }
+    )
+
+    # flujo después de rewrite
     graph.add_edge("rewrite", "roadmap")
 
     return graph.compile()
+
+def decide_next_step(state: AgentState) -> str:
+    analysis = state.get("analysis", {})
+    score = analysis.get("match_score", 0)
+
+    if score < 60:
+        return "rewrite"
+    elif score < 80:
+        return "roadmap"
+    else:
+        return "end"
