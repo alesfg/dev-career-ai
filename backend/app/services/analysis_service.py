@@ -1,25 +1,13 @@
-from app.services.ai_service import (
-    extract_cv,
-    extract_job,
-    compare_and_generate,
-    rewrite_cv,
-    generate_roadmap
-)
+from app.agents.career_agent import build_agent
+
+
+agent = build_agent()
+
 
 def run_analysis(cv_text: str, job_text: str) -> dict:
-    cv_data = extract_cv(cv_text)
-    job_data = extract_job(job_text)
+    result = agent.invoke({
+        "cv_text": cv_text,
+        "job_text": job_text
+    })
 
-    analysis = compare_and_generate(cv_data, job_data)
-
-    rewritten = rewrite_cv(cv_text, job_text, analysis)
-
-    roadmap = generate_roadmap(analysis)
-
-    return {
-        "cv_data": cv_data,
-        "job_data": job_data,
-        "analysis": analysis,
-        "rewritten_cv": rewritten,
-        "roadmap": roadmap
-    }
+    return result
