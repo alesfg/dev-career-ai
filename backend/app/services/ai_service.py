@@ -1,3 +1,4 @@
+import json
 from openai import OpenAI
 from app.core.config import settings
 
@@ -10,32 +11,42 @@ You are a senior technical recruiter and career coach.
 
 Analyze the following CV and job description.
 
+Return ONLY a valid JSON. No explanations. No extra text.
+
+If you fail to return valid JSON, your response is useless.
+
+Structure:
+{{
+  "match_score": number,
+  "strengths": [],
+  "weaknesses": [],
+  "missing_skills": [],
+  "cv_improvements": [],
+  "project_suggestions": []
+}}
+
 CV:
 {cv_text}
 
 JOB DESCRIPTION:
 {job_text}
-
-Return ONLY a JSON with:
-- match_score (0-100)
-- strengths (list)
-- weaknesses (list)
-- missing_skills (list)
-- cv_improvements (list)
-- project_suggestions (list)
-
-Be specific and practical.
 """
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "You are an expert recruiter."},
+            {"role": "system", "content": "You ONLY return valid JSON."},
             {"role": "user", "content": prompt}
         ],
-        temperature=0.7
+        temperature=0.3
     )
 
     content = response.choices[0].message.content
 
-    return content
+    try:
+        return json.loads(content)
+    except:
+        return {
+            "error": "Invalid JSON from model",
+            "raw_output": content
+        }

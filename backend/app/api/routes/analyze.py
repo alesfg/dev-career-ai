@@ -7,7 +7,4 @@ router = APIRouter()
 @router.post("/analyze")
 def analyze(data: AnalyzeRequest):
     result = analyze_cv_job(data.cv_text, data.job_text)
-
-    return {
-        "analysis": result
-    }
+    return result
