@@ -100,3 +100,49 @@ def safe_json(content: str) -> dict:
             "error": "Invalid JSON",
             "raw_output": content
         }
+    
+def rewrite_cv(cv_text: str, job_text: str, analysis: dict) -> dict:
+    prompt = f"""
+You are an expert technical recruiter.
+
+Rewrite the CV to better match the job description.
+
+Rules:
+- Keep it realistic (do not invent fake experience)
+- Emphasize relevant skills
+- Use strong action verbs
+- Optimize for ATS keywords
+- Make it concise and impactful
+
+Format the CV in a clean, professional structure with sections:
+- Summary
+- Experience
+- Skills
+- Projects
+
+ORIGINAL CV:
+{cv_text}
+
+JOB DESCRIPTION:
+{job_text}
+
+ANALYSIS:
+{analysis}
+
+Return ONLY JSON:
+{{
+  "rewritten_cv": "full rewritten CV text",
+  "key_changes": ["list of main improvements made"]
+}}
+"""
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You only return JSON."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.4
+    )
+
+    return safe_json(response.choices[0].message.content)
