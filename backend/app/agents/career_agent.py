@@ -86,7 +86,5 @@ def decide_next_step(state: AgentState) -> str:
 
     if score < 60:
         return "rewrite"
-    elif score < 80:
-        return "roadmap"
     else:
-        return "end"
+        return "roadmap"
